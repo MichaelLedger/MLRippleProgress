@@ -8,6 +8,11 @@
 
 #import "MLRippleProgress.h"
 
+#define RGB(r, g, b)    [UIColor colorWithRed:(r)/255.f green:(g)/255.f blue:(b)/255.f alpha:1.f]
+#define RGBA(r, g, b, a)    [UIColor colorWithRed:(r)/255.f green:(g)/255.f blue:(b)/255.f alpha:a]
+#define RGBHEX(hex) [UIColor colorWithRed:((float)((hex & 0xFF0000) >> 16)) / 255.0 green:((float)((hex & 0xFF00) >> 8)) / 255.0 blue:((float)(hex & 0xFF)) / 255.0 alpha:1]
+#define RGBHEXA(hex,a) [UIColor colorWithRed:((float)(((hex) & 0xFF0000) >> 16))/255.0 green:((float)(((hex) & 0xFF00)>>8))/255.0 blue: ((float)((hex) & 0xFF))/255.0 alpha:(a)]
+
 @interface MLRippleProgress ()
 
 @property (nonatomic, strong) NSMutableArray <CAShapeLayer *> *waveLayers;
@@ -67,7 +72,7 @@
 
 #pragma mark - Init Data
 - (void)initData {
-    _waveColors = @[[self randamColor],[self randamColor],[self randamColor],[self randamColor]];
+    _waveColors = @[RGBA(0,186,128,0.8), RGBA(111,224,195,1)];
     _poolPercent = 0;
     _waveAmplitude = self.bounds.size.width / 20;
     _waveFlowSpeed = 0.4/M_PI;
@@ -96,13 +101,13 @@
 #pragma mark - Draw Waves
 - (void)drawWaves {
     __weak __typeof(self) weakSelf = self;
-    [_waveColors enumerateObjectsUsingBlock:^(UIColor * _Nonnull waveColor, NSUInteger idx, BOOL * _Nonnull stop) {
+    
+    [_waveColors enumerateObjectsWithOptions:NSEnumerationReverse usingBlock:^(UIColor * _Nonnull waveColor, NSUInteger idx, BOOL * _Nonnull stop) {
         CAShapeLayer *waveLayer = [CAShapeLayer layer];
         waveLayer.fillColor = waveColor.CGColor;
         [weakSelf.layer addSublayer:waveLayer];
         [weakSelf.waveLayers addObject:waveLayer];
     }];
-    
 }
 
 #pragma mark - Remove Waves
@@ -144,7 +149,7 @@
     
     if (_variableWaveAmplitude <= 0) {
         _needIncrease = YES;
-    } else if (_variableWaveAmplitude > 1.0 - fabs(_poolPercent - 0.5)) {
+    } else if (_variableWaveAmplitude > 1.6 - fabs(_poolPercent - 0.5)) {
         _needIncrease = NO;
     }
 }
@@ -169,11 +174,7 @@
         CGFloat diffOffsetX = weakSelf.bounds.size.width / weakSelf.waveLayers.count * idx;
         for (CGFloat x = 0.f; x <= weakSelf.bounds.size.width; x++) {
             CGFloat y = weakSelf.bounds.size.height * (1 - adjustPoolPercent);
-            if (idx % 2) {
-                y += weakSelf.waveAmplitude * weakSelf.variableWaveAmplitude * sin(2 * M_PI / weakSelf.bounds.size.width * (x - M_PI/weakSelf.waveLayers.count * idx) + weakSelf.waveOffsetX + diffOffsetX);
-            } else {
-                y += weakSelf.waveAmplitude * weakSelf.variableWaveAmplitude * cos(2 * M_PI / weakSelf.bounds.size.width * (x - M_PI/weakSelf.waveLayers.count * idx) + weakSelf.waveOffsetX + diffOffsetX);
-            }
+                y += weakSelf.waveAmplitude * weakSelf.variableWaveAmplitude * sin(1.29 * M_PI / weakSelf.bounds.size.width * (x - M_PI/weakSelf.waveLayers.count * idx) + weakSelf.waveOffsetX + diffOffsetX);
             CGPathAddLineToPoint(path, nil, x, y);
         }
         CGPathAddLineToPoint(path, nil, weakSelf.bounds.size.width, weakSelf.bounds.size.height);

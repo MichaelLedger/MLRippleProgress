@@ -29,6 +29,8 @@
     [self.view addSubview:rippleProgress];
     [rippleProgress startWave];
     
+    _needIncrease = YES;
+    
     __block NSTimer *testTimer = [NSTimer timerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
         if (self->_needIncrease) {
             rippleProgress.poolPercent += 0.1;
@@ -52,10 +54,10 @@
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [rippleProgress startWave];
-        });
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [rippleProgress resetWave];
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [rippleProgress resetWave];
+            });
         });
     });
 }
