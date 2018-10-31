@@ -12,15 +12,35 @@
 
 @property (nonatomic, strong) NSMutableArray <CAShapeLayer *> *waveLayers;
 
-@property (nonatomic, strong) CADisplayLink *waveDisplayLink;//计时器
+/**
+ Timer
+ 计时器
+ */
+@property (nonatomic, strong) CADisplayLink *waveDisplayLink;
 
-@property (nonatomic, assign) CGFloat lastPoolPercent;//上次水量百分比
+/**
+ Record Pool Water Percent
+ 上次水量百分比
+ */
+@property (nonatomic, assign) CGFloat lastPoolPercent;
 
-@property (nonatomic, assign) CGFloat waveOffsetX;//波纹X位移
+/**
+ Record wave horizontal offset
+ 波纹X位移
+ */
+@property (nonatomic, assign) CGFloat waveOffsetX;
 
-@property (nonatomic, assign) CGFloat variableWaveAmplitude;//波幅仿真变量
+/**
+ Varialbe for emulation wave amplitude changing
+ 波幅仿真变量
+ */
+@property (nonatomic, assign) CGFloat variableWaveAmplitude;
 
-@property (nonatomic, assign) BOOL needIncrease;//波幅仿真是否增大
+/**
+ Whether increase Varialbe for emulation wave amplitude changing
+ 波幅仿真是否增大
+ */
+@property (nonatomic, assign) BOOL needIncrease;
 
 @end
 
@@ -47,11 +67,13 @@
 
 #pragma mark - Init Data
 - (void)initData {
-    _waveColors = @[[self randamColor],[self randamColor]];
+    _waveColors = @[[self randamColor],[self randamColor],[self randamColor],[self randamColor]];
     _poolPercent = 0;
-    _waveAmplitude = 5;
+    _waveAmplitude = self.bounds.size.width / 20;
     _waveFlowSpeed = 0.4/M_PI;
     _waveGrowSpeed = 0.002;
+    _variableWaveAmplitude = 0;
+    _lastPoolPercent = 0;
 }
 
 #pragma mark - Public Method
@@ -64,54 +86,65 @@
 }
 
 - (void)resetWave {
-    _poolPercent = 0;
-    _needIncrease = NO;
     _variableWaveAmplitude = 0;
-    [self invalideDisplayLink];
-    [self.waveLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull waveLayer, NSUInteger idx, BOOL * _Nonnull stop) {
-        [waveLayer removeFromSuperlayer];
-    }];
+    _lastPoolPercent = 0;
+    [self removeWaves];
     [self drawWaves];
+    [self startWave];
 }
 
 #pragma mark - Draw Waves
 - (void)drawWaves {
+    __weak __typeof(self) weakSelf = self;
     [_waveColors enumerateObjectsUsingBlock:^(UIColor * _Nonnull waveColor, NSUInteger idx, BOOL * _Nonnull stop) {
         CAShapeLayer *waveLayer = [CAShapeLayer layer];
         waveLayer.fillColor = waveColor.CGColor;
-        [self.layer addSublayer:waveLayer];
-        [self.waveLayers addObject:waveLayer];
+        [weakSelf.layer addSublayer:waveLayer];
+        [weakSelf.waveLayers addObject:waveLayer];
     }];
     
 }
 
+#pragma mark - Remove Waves
+- (void)removeWaves {
+    [self.waveLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull waveLayer, NSUInteger idx, BOOL * _Nonnull stop) {
+        [waveLayer removeFromSuperlayer];
+    }];
+}
+
 #pragma mark - Validate DisplayLink
 - (void)validateDisplayLink {
-    [self.waveDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    if (!_waveDisplayLink) {
+        _waveDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(checkPoolPercent)];
+        [_waveDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    }
 }
 
 #pragma mark - Invalide DisplayLink
 - (void)invalideDisplayLink {
-    [self.waveDisplayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    if (_waveDisplayLink) {
+        [_waveDisplayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+        [_waveDisplayLink invalidate];
+        _waveDisplayLink = nil;
+    }
 }
 
 #pragma mark - DisplayLink Fire
 - (void)checkPoolPercent {
-    _waveOffsetX += _waveFlowSpeed;
     [self drawWavePath];
 }
 
 #pragma mark - Emulation Wave
 - (void)emulationWave {
     if (_needIncrease) {
-        _variableWaveAmplitude += 0.01;
+        _variableWaveAmplitude += arc4random() % 10 * 0.001;
     } else {
-        _variableWaveAmplitude -= 0.01;
+        _variableWaveAmplitude -= arc4random() % 10 * 0.001;
     }
     
-    if (_variableWaveAmplitude <= 1.0) {
+    if (_variableWaveAmplitude <= 0) {
         _needIncrease = YES;
-    } else if (_variableWaveAmplitude > 1.6 - fabs(_poolPercent - 0.5)) {
+    } else if (_variableWaveAmplitude > 1.0 - fabs(_poolPercent - 0.5)) {
         _needIncrease = NO;
     }
 }
@@ -127,21 +160,24 @@
         adjustPoolPercent = _lastPoolPercent - _waveGrowSpeed;
     }
     
+    _waveOffsetX += _waveFlowSpeed * (0.5 + _variableWaveAmplitude);
+    
+    __weak __typeof(self) weakSelf = self;
     [self.waveLayers enumerateObjectsUsingBlock:^(CAShapeLayer * _Nonnull waveLayer, NSUInteger idx, BOOL * _Nonnull stop) {
         CGMutablePathRef path = CGPathCreateMutable();
         CGPathMoveToPoint(path, nil, 0, adjustPoolPercent);
-        for (CGFloat x = 0.f; x <= self.bounds.size.width; x++) {
-            CGFloat y = self.bounds.size.height * (1 - adjustPoolPercent);
+        CGFloat diffOffsetX = weakSelf.bounds.size.width / weakSelf.waveLayers.count * idx;
+        for (CGFloat x = 0.f; x <= weakSelf.bounds.size.width; x++) {
+            CGFloat y = weakSelf.bounds.size.height * (1 - adjustPoolPercent);
             if (idx % 2) {
-                y += self->_waveAmplitude * self->_variableWaveAmplitude * sin(1.29 * M_PI / self.bounds.size.width * x + self->_waveOffsetX);
+                y += weakSelf.waveAmplitude * weakSelf.variableWaveAmplitude * sin(2 * M_PI / weakSelf.bounds.size.width * (x - M_PI/weakSelf.waveLayers.count * idx) + weakSelf.waveOffsetX + diffOffsetX);
             } else {
-                y += self->_waveAmplitude * self->_variableWaveAmplitude * cos(1.29 * M_PI / self.bounds.size.width * x + self->_waveOffsetX);
+                y += weakSelf.waveAmplitude * weakSelf.variableWaveAmplitude * cos(2 * M_PI / weakSelf.bounds.size.width * (x - M_PI/weakSelf.waveLayers.count * idx) + weakSelf.waveOffsetX + diffOffsetX);
             }
-            
             CGPathAddLineToPoint(path, nil, x, y);
         }
-        CGPathAddLineToPoint(path, nil, self.bounds.size.width, self.bounds.size.height);
-        CGPathAddLineToPoint(path, nil, 0, self.bounds.size.height);
+        CGPathAddLineToPoint(path, nil, weakSelf.bounds.size.width, weakSelf.bounds.size.height);
+        CGPathAddLineToPoint(path, nil, 0, weakSelf.bounds.size.height);
         CGPathCloseSubpath(path);
         waveLayer.path = path;
         CGPathRelease(path);
@@ -155,13 +191,6 @@
         _waveLayers = [NSMutableArray array];
     }
     return _waveLayers;
-}
-
-- (CADisplayLink *)waveDisplayLink {
-    if (!_waveDisplayLink) {
-        _waveDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(checkPoolPercent)];
-    }
-    return _waveDisplayLink;
 }
 
 #pragma mark - Setter
@@ -189,7 +218,7 @@
 
 #pragma mark - Dealloc
 - (void)dealloc {
-    [self invalideDisplayLink];
+    [self stopWave];
 }
 
 @end
