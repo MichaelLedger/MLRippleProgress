@@ -24,7 +24,7 @@
 }
 
 - (void)setupUI {
-    MLRippleProgress *rippleProgress = [[MLRippleProgress alloc] initWithFrame:CGRectMake((CGRectGetWidth(self.view.frame) - 180)/2, 44, 180, 180)];
+    MLRippleProgress *rippleProgress = [[MLRippleProgress alloc] initWithFrame:CGRectMake((CGRectGetWidth(self.view.frame) - 180)/2, (CGRectGetHeight(self.view.frame) - 180) / 2, 180, 180)];
     rippleProgress.poolPercent = 0.2;
     [self.view addSubview:rippleProgress];
     [rippleProgress startWave];
