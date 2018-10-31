@@ -100,6 +100,14 @@
     [self startWave];
 }
 
+- (void)resetWaveWithoutAnimation {
+    _variableWaveAmplitude = 0;
+    _lastPoolPercent = _poolPercent;
+    [self removeWaves];
+    [self drawWaves];
+    [self startWave];
+}
+
 #pragma mark - Draw Waves
 - (void)drawWaves {
     __weak __typeof(self) weakSelf = self;

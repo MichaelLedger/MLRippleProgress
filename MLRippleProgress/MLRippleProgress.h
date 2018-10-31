@@ -69,4 +69,10 @@
  */
 -(void)resetWave;
 
+/**
+ Restart water flooding without animation
+ 无动画重新注水
+ */
+-(void)resetWaveWithoutAnimation;
+
 @end
