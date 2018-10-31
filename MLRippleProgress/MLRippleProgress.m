@@ -55,7 +55,7 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
-        self.userInteractionEnabled = NO;
+//        self.userInteractionEnabled = NO;//If superview is UIButton, need add this.
         [self initData];
         [self drawWaves];
     }
@@ -65,7 +65,7 @@
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     if (self = [super initWithCoder:aDecoder]) {
         self.backgroundColor = [UIColor clearColor];
-        self.userInteractionEnabled = NO;
+//        self.userInteractionEnabled = NO;//If superview is UIButton, need add this.
         [self initData];
         [self drawWaves];
     }
