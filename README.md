@@ -1,6 +1,6 @@
 # MLRippleProgress
 
-Rounded Ripple Shape Progress View, usually used in download progress animation.
+Rounded Ripple Shape Progress View, Using CAShapeLayer & CADisplayLink.
 
 圆形水波加载动画，自定义空间大，可加载多组色值的水波纹
 
