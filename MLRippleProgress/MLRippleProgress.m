@@ -24,12 +24,6 @@
 @property (nonatomic, strong) CADisplayLink *waveDisplayLink;
 
 /**
- Record Pool Water Percent
- 上次水量百分比
- */
-@property (nonatomic, assign) CGFloat lastPoolPercent;
-
-/**
  Record wave horizontal offset
  波纹X位移
  */

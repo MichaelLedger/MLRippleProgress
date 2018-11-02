@@ -23,6 +23,12 @@
 @property (nonatomic, assign) CGFloat poolPercent;
 
 /**
+ Record Pool Water Percent
+ 上次水量百分比
+ */
+@property (nonatomic, assign) CGFloat lastPoolPercent;
+
+/**
  Wave Amplitude
  水波振幅
  */
