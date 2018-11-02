@@ -170,9 +170,9 @@
     
     CGFloat adjustPoolPercent = _lastPoolPercent;
     if (_poolPercent > _lastPoolPercent) {//increase
-        adjustPoolPercent = _lastPoolPercent + _waveGrowSpeed;
+        adjustPoolPercent = (_lastPoolPercent + _waveGrowSpeed) > _poolPercent ? _poolPercent : (_lastPoolPercent + _waveGrowSpeed);
     } else {//decrease
-        adjustPoolPercent = _lastPoolPercent - _waveGrowSpeed;
+        adjustPoolPercent = (_lastPoolPercent - _waveGrowSpeed) < 0 ? 0 : (_lastPoolPercent - _waveGrowSpeed);
     }
     
     _waveOffsetX += _waveFlowSpeed * (0.5 + _variableWaveAmplitude);
